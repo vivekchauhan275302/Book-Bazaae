@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Science Books - Book Bazaar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3SpaaRcXlz5tyQPqsyG0KUDMlGPuy51Q",
+      authDomain: "bookbazar-c2b8f.firebaseapp.com",
+      projectId: "bookbazar-c2b8f",
+      storageBucket: "bookbazar-c2b8f.firebasestorage.app",
+      messagingSenderId: "879607459223",
+      appId: "1:879607459223:web:8d866d79bd8622a44728d2",
+      measurementId: "G-0WB4QMGTMB"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    
+    // Make auth and db available globally
+    window.auth = getAuth(app);
+    window.db = getFirestore(app);
+  </script>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Simplified Navbar -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex-shrink-0">
+          <a href="index.html" class="flex items-center">
+            <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center">
+              <i class="ph ph-books text-2xl mr-2"></i> Book Bazaar
+            </span>
+          </a>
+        </div>
+        <div class="hidden md:block">
+          <div class="ml-10 flex items-center space-x-8">
+            <a href="fiction.html" class="nav-link text-gray-700 hover:text-blue-600 font-medium">Fiction</a>
+            <a href="non-fiction.html" class="nav-link text-gray-700 hover:text-blue-600 font-medium">Non-Fiction</a>
+            <a href="science.html" class="nav-link text-blue-600 border-b-2 border-blue-600 font-medium">Science</a>
+            <a href="sacred-texts.html" class="nav-link text-gray-700 hover:text-blue-600 font-medium">Holy Books</a>
+            <a href="children.html" class="nav-link text-gray-700 hover:text-blue-600 font-medium">Children</a>
+            <a href="business.html" class="nav-link text-gray-700 hover:text-blue-600 font-medium">Business</a>
+          </div>
+        </div>
+        <div>
+          <a href="cart.html" class="relative text-gray-700 hover:text-blue-600 transition-colors">
+            <i class="ph ph-shopping-cart text-xl"></i>
+            <span class="absolute -top-2 -right-2 bg-blue-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-medium">0</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <div class="bg-gradient-to-r from-green-700 to-teal-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <h1 class="text-3xl font-bold">Science Books</h1>
+      <p class="mt-2">Discover the wonders of the natural world through our science collection</p>
+    </div>
+  </div>
+
+  <!-- Book Categories -->
+  <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <div class="flex flex-wrap gap-4 mb-8">
+      <a href="#" class="px-4 py-2 bg-green-600 text-white rounded-full text-sm font-medium">All Science</a>
+      <a href="#" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full text-sm font-medium">Physics</a>
+      <a href="#" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full text-sm font-medium">Biology</a>
+      <a href="#" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full text-sm font-medium">Chemistry</a>
+      <a href="#" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full text-sm font-medium">Astronomy</a>
+      <a href="#" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full text-sm font-medium">Mathematics</a>
+      <a href="#" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full text-sm font-medium">Environmental Science</a>
+    </div>
+  </div>
+
+  <!-- Featured Science Books -->
+  <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <h2 class="text-2xl font-bold mb-6">Featured Science Books</h2>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Book Card 1 -->
+      <div class="book-card bg-white rounded-lg shadow-md overflow-hidden">
+        <img class="w-full h-56 object-cover" src="https://images.unsplash.com/photo-1593642634315-48f5414c3ad9" alt="A Brief History of Time">
+        <div class="p-4">
+          <h3 class="text-lg font-semibold">A Brief History of Time</h3>
+          <p class="text-sm text-gray-600">Stephen Hawking</p>
+          <div class="mt-4 flex justify-between items-center">
+            <span class="text-green-600 font-bold">₹499</span>
+            <button class="cart-btn bg-green-600 text-white px-3 py-1 rounded-full text-sm"
+              data-id="brief-history-time" 
+              data-name="A Brief History of Time" 
+              data-price="499" 
+              data-image="https://images.unsplash.com/photo-1593642634315-48f5414c3ad9">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Book Card 2 -->
+      <div class="book-card bg-white rounded-lg shadow-md overflow-hidden">
+        <img class="w-full h-56 object-cover" src="image/cosmosh.png" alt="Cosmos">
+        <div class="p-4">
+          <h3 class="text-lg font-semibold">Cosmos</h3>
+          <p class="text-sm text-gray-600">Carl Sagan</p>
+          <div class="mt-4 flex justify-between items-center">
+            <span class="text-green-600 font-bold">₹449</span>
+            <button class="cart-btn bg-green-600 text-white px-3 py-1 rounded-full text-sm"
+              data-id="cosmos" 
+              data-name="Cosmos" 
+              data-price="449" 
+              data-image="https://images.unsplash.com/photo-1571425046056-77619364d2fb">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Book Card 3 -->
+      <div class="book-card bg-white rounded-lg shadow-md overflow-hidden">
+        <img class="w-full h-56 object-cover" src="image/theselfish.png" alt="The Selfish Gene">
+        <div class="p-4">
+          <h3 class="text-lg font-semibold">The Selfish Gene</h3>
+          <p class="text-sm text-gray-600">Richard Dawkins</p>
+          <div class="mt-4 flex justify-between items-center">
+            <span class="text-green-600 font-bold">₹399</span>
+            <button class="cart-btn bg-green-600 text-white px-3 py-1 rounded-full text-sm"
+              data-id="selfish-gene" 
+              data-name="The Selfish Gene" 
+              data-price="399" 
+              data-image="https://images.unsplash.com/photo-1598903866093-1e841af38c72">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Book Card 4 -->
+      <div class="book-card bg-white rounded-lg shadow-md overflow-hidden">
+        <img class="w-full h-56 object-cover" src="https://images.unsplash.com/photo-1465101162946-4377e57745c3" alt="Sapiens">
+        <div class="p-4">
+          <h3 class="text-lg font-semibold">Sapiens</h3>
+          <p class="text-sm text-gray-600">Yuval Noah Harari</p>
+          <div class="mt-4 flex justify-between items-center">
+            <span class="text-green-600 font-bold">₹559</span>
+            <button class="cart-btn bg-green-600 text-white px-3 py-1 rounded-full text-sm"
+              data-id="sapiens" 
+              data-name="Sapiens" 
+              data-price="559" 
+              data-image="https://images.unsplash.com/photo-1465101162946-4377e57745c3">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popular Authors -->
+  <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <h2 class="text-2xl font-bold mb-6">Popular Science Authors</h2>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-lg shadow text-center">
+        <div class="w-20 h-20 rounded-full mx-auto bg-gray-200 mb-3"></div>
+        <h3 class="font-medium">Stephen Hawking</h3>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow text-center">
+        <div class="w-20 h-20 rounded-full mx-auto bg-gray-200 mb-3"></div>
+        <h3 class="font-medium">Carl Sagan</h3>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow text-center">
+        <div class="w-20 h-20 rounded-full mx-auto bg-gray-200 mb-3"></div>
+        <h3 class="font-medium">Richard Dawkins</h3>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow text-center">
+        <div class="w-20 h-20 rounded-full mx-auto bg-gray-200 mb-3"></div>
+        <h3 class="font-medium">Neil deGrasse Tyson</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simplified Footer -->
+  <footer class="bg-gray-900 text-white py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <p>&copy; 2023 Book Bazaar. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart functionality script -->
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore, doc, updateDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const auth = window.auth;
+    const db = window.db;
+    
+    // Setup cart functionality when DOM is loaded
+    document.addEventListener('DOMContentLoaded', setupCartButtons);
+    
+    // Update cart count when auth state changes
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const userRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userRef);
+          
+          if (userDoc.exists() && userDoc.data().cart) {
+            const cartCount = userDoc.data().cart.length;
+            // Update cart count in navbar
+            const cartCountElement = document.querySelector('.ph-shopping-cart + span');
+            if (cartCountElement) {
+              cartCountElement.textContent = cartCount;
+            }
+          }
+        } catch (error) {
+          console.error("Error getting cart count:", error);
+        }
+      }
+    });
+
+    function setupCartButtons() {
+      const cartButtons = document.querySelectorAll('.cart-btn');
+      
+      cartButtons.forEach(button => {
+        // Remove any existing click handlers to prevent duplicates
+        button.removeEventListener('click', handleCartButtonClick);
+        // Add the click handler
+        button.addEventListener('click', handleCartButtonClick);
+      });
+    }
+    
+    async function handleCartButtonClick(e) {
+      // Check if user is logged in
+      const user = auth.currentUser;
+      if (!user) {
+        alert('Please login to add items to cart');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Get button that was clicked
+      const button = e.currentTarget;
+      
+      // Get book details from data attributes
+      const bookId = button.dataset.id;
+      const bookName = button.dataset.name;
+      const bookPrice = button.dataset.price;
+      const bookImage = button.dataset.image;
+      
+      if (!bookId || !bookName || !bookPrice || !bookImage) {
+        console.error("Missing data attributes on cart button", button);
+        alert('There was an error adding the item to your cart. Please try again.');
+        return;
+      }
+      
+      try {
+        // Reference to user document
+        const userRef = doc(db, "users", user.uid);
+        
+        // Get current cart items
+        const userDoc = await getDoc(userRef);
+        
+        if (!userDoc.exists()) {
+          console.error("User document doesn't exist");
+          return;
+        }
+        
+        // Check if item already exists in cart
+        const userCart = userDoc.data().cart || [];
+        const existingItemIndex = userCart.findIndex(item => item.bookId === bookId);
+        
+        if (existingItemIndex >= 0) {
+          // Item exists, increment quantity
+          userCart[existingItemIndex].quantity += 1;
+          await updateDoc(userRef, { cart: userCart });
+        } else {
+          // Add new item to cart
+          await updateDoc(userRef, {
+            cart: arrayUnion({
+              bookId,
+              bookName,
+              price: bookPrice,
+              image: bookImage,
+              quantity: 1,
+              addedAt: new Date().toISOString()
+            })
+          });
+        }
+        
+        // Show confirmation to user
+        alert(`${bookName} has been added to your cart!`);
+        
+        // Update cart count in navbar
+        const cartCountElement = document.querySelector('.ph-shopping-cart + span');
+        if (cartCountElement) {
+          const currentCount = parseInt(cartCountElement.textContent);
+          cartCountElement.textContent = existingItemIndex >= 0 ? currentCount : currentCount + 1;
+        }
+        
+      } catch (error) {
+        console.error("Error adding to cart:", error);
+        alert('There was an error adding the item to your cart. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html> 

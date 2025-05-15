@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Donate - Book Bazaar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script> <!-- Icons -->
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3SpaaRcXlz5tyQPqsyG0KUDMlGPuy51Q",
+      authDomain: "bookbazar-c2b8f.firebaseapp.com",
+      projectId: "bookbazar-c2b8f",
+      storageBucket: "bookbazar-c2b8f.firebasestorage.app",
+      messagingSenderId: "879607459223",
+      appId: "1:879607459223:web:8d866d79bd8622a44728d2",
+      measurementId: "G-0WB4QMGTMB"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    
+    // Make auth and db available globally
+    window.auth = getAuth(app);
+    window.db = getFirestore(app);
+  </script>
+  
+  <style>
+    /* Custom styles for modern UI */
+    .nav-link {
+      position: relative;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -4px;
+      left: 0;
+      background-color: #2563eb;
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    
+    .book-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .book-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .donate-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .donate-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Dark mode specific styles */
+    .dark {
+      color-scheme: dark;
+    }
+    
+    .dark .donate-card {
+      background: #1f2937;
+      border-color: #374151;
+    }
+    
+    .dark .donate-card h3 {
+      color: #f3f4f6;
+    }
+    
+    .dark .donate-card p {
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 transition-colors duration-300">
+
+  <!-- Navbar (you would include the same navbar from index.html) -->
+  <!-- For brevity, I'm not including it here but you should copy it from index.html -->
+
+  <!-- Page Header -->
+  <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col items-center text-center">
+        <h1 class="text-3xl md:text-4xl font-bold">Donate Books, Share Knowledge</h1>
+        <p class="mt-2 text-blue-100 max-w-3xl">Help us spread the joy of reading to those who need it most. Your book donations make a significant impact in our community.</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Breadcrumbs -->
+  <div class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex items-center space-x-2 text-sm text-gray-500">
+        <a href="index.html" class="hover:text-blue-600 transition-colors">Home</a>
+        <i class="ph ph-caret-right text-xs"></i>
+        <span class="text-gray-900 font-medium">Donate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Donation Impact Section -->
+    <section class="mb-16">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold mb-3">
+          <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Your Impact</span>
+        </h2>
+        <p class="text-gray-600 max-w-3xl mx-auto">Every book donation creates ripples of knowledge and inspiration, touching lives across communities.</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Impact Card 1 -->
+        <div class="bg-white rounded-xl p-8 text-center shadow-md">
+          <div class="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <i class="ph ph-student text-blue-600 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Education</h3>
+          <p class="text-gray-600">Your donated books help students access educational materials they might not otherwise afford.</p>
+        </div>
+        
+        <!-- Impact Card 2 -->
+        <div class="bg-white rounded-xl p-8 text-center shadow-md">
+          <div class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <i class="ph ph-tree text-green-600 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Environment</h3>
+          <p class="text-gray-600">Reusing books reduces waste and saves trees, contributing to environmental conservation.</p>
+        </div>
+        
+        <!-- Impact Card 3 -->
+        <div class="bg-white rounded-xl p-8 text-center shadow-md">
+          <div class="w-16 h-16 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-4">
+            <i class="ph ph-users-three text-purple-600 text-2xl"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">Community</h3>
+          <p class="text-gray-600">Shared books build community connections and promote literacy across all age groups.</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- How to Donate Section -->
+    <section class="mb-16">
+      <div class="bg-white rounded-xl overflow-hidden shadow-md">
+        <div class="grid grid-cols-1 lg:grid-cols-2">
+          <div class="p-8 md:p-12">
+            <h2 class="text-2xl font-bold mb-6">How to Donate Books</h2>
+            <div class="space-y-6">
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span class="text-blue-600 font-bold">1</span>
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium">Prepare Your Books</h3>
+                  <p class="text-gray-600 mt-1">Clean your books and make sure they're in good condition. We accept most genres and reading levels.</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span class="text-blue-600 font-bold">2</span>
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium">Drop Off at a Collection Point</h3>
+                  <p class="text-gray-600 mt-1">Bring your books to any Book Bazaar store or one of our partner libraries listed below.</p>
+                </div>
+              </div>
+              <div class="flex items-start">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span class="text-blue-600 font-bold">3</span>
+                </div>
+                <div class="ml-4">
+                  <h3 class="font-medium">Schedule a Pickup</h3>
+                  <p class="text-gray-600 mt-1">For bulk donations (more than 20 books), we can arrange a free pickup from your location.</p>
+                </div>
+              </div>
+            </div>
+            <button class="mt-8 bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition duration-300">
+              Schedule a Pickup
+            </button>
+          </div>
+          <div class="relative h-64 lg:h-auto">
+            <img src="https://images.unsplash.com/photo-1521056787327-865eb237884a" alt="Books Donation" class="absolute inset-0 h-full w-full object-cover">
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Donation Options Section -->
+    <section class="mb-16">
+      <div class="text-center mb-12">
+        <h2 class="text-2xl font-bold mb-3">
+          Other Ways to Support
+        </h2>
+        <p class="text-gray-600 max-w-3xl mx-auto">Can't donate books? There are many other ways you can contribute to our mission.</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Donate Card 1 -->
+        <div class="donate-card bg-white rounded-xl overflow-hidden shadow-md">
+          <div class="p-6">
+            <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+              <i class="ph ph-currency-inr text-amber-600 text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Monetary Donation</h3>
+            <p class="text-gray-600 mb-4">Your financial contribution helps us purchase books for underserved communities and support literacy programs.</p>
+            <div class="flex flex-wrap gap-2 mb-4">
+              <button class="px-4 py-2 border border-gray-300 rounded-full hover:border-blue-600 hover:text-blue-600 transition-colors">₹100</button>
+              <button class="px-4 py-2 border border-gray-300 rounded-full hover:border-blue-600 hover:text-blue-600 transition-colors">₹250</button>
+              <button class="px-4 py-2 border border-gray-300 rounded-full hover:border-blue-600 hover:text-blue-600 transition-colors">₹500</button>
+              <button class="px-4 py-2 border border-gray-300 rounded-full hover:border-blue-600 hover:text-blue-600 transition-colors">₹1000</button>
+            </div>
+            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition duration-300">
+              Donate Now
+            </button>
+          </div>
+        </div>
+        
+        <!-- Donate Card 2 -->
+        <div class="donate-card bg-white rounded-xl overflow-hidden shadow-md">
+          <div class="p-6">
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <i class="ph ph-clock-clockwise text-green-600 text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Volunteer Time</h3>
+            <p class="text-gray-600 mb-4">Help sort books, organize events, or participate in our reading programs for children and adults.</p>
+            <ul class="mb-4 text-gray-600">
+              <li class="flex items-center mb-2">
+                <i class="ph ph-check-circle text-green-500 mr-2"></i>
+                <span>Flexible scheduling</span>
+              </li>
+              <li class="flex items-center mb-2">
+                <i class="ph ph-check-circle text-green-500 mr-2"></i>
+                <span>Various roles available</span>
+              </li>
+              <li class="flex items-center">
+                <i class="ph ph-check-circle text-green-500 mr-2"></i>
+                <span>No minimum time commitment</span>
+              </li>
+            </ul>
+            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition duration-300">
+              Volunteer with Us
+            </button>
+          </div>
+        </div>
+        
+        <!-- Donate Card 3 -->
+        <div class="donate-card bg-white rounded-xl overflow-hidden shadow-md">
+          <div class="p-6">
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+              <i class="ph ph-handshake text-purple-600 text-xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold mb-2">Corporate Partnership</h3>
+            <p class="text-gray-600 mb-4">Partner with us for CSR initiatives, employee engagement, or sponsorship opportunities.</p>
+            <div class="mb-4 bg-gray-50 rounded-lg p-4">
+              <p class="text-sm text-gray-700">Our corporate partners enjoy recognition, employee volunteer opportunities, and the knowledge that they're making a difference in the community.</p>
+            </div>
+            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition duration-300">
+              Become a Partner
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Testimonials Section -->
+    <section class="mb-16">
+      <div class="text-center mb-12">
+        <h2 class="text-2xl font-bold mb-3">
+          Donor Stories
+        </h2>
+        <p class="text-gray-600 max-w-3xl mx-auto">Hear from people who have made a difference through book donations.</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Testimonial 1 -->
+        <div class="bg-white rounded-xl p-6 shadow-md">
+          <div class="flex items-center mb-4">
+            <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Donor" class="w-12 h-12 rounded-full object-cover mr-4">
+            <div>
+              <h3 class="font-semibold">Meera Patel</h3>
+              <p class="text-gray-500 text-sm">Donated 150+ books</p>
+            </div>
+          </div>
+          <p class="text-gray-600 italic">"After my children grew up, I had shelves of beautiful books that weren't being read. Donating them to Book Bazaar was the perfect solution. Now I know those stories are continuing to inspire young minds."</p>
+        </div>
+        
+        <!-- Testimonial 2 -->
+        <div class="bg-white rounded-xl p-6 shadow-md">
+          <div class="flex items-center mb-4">
+            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Donor" class="w-12 h-12 rounded-full object-cover mr-4">
+            <div>
+              <h3 class="font-semibold">Ravi Sharma</h3>
+              <p class="text-gray-500 text-sm">Monthly donor</p>
+            </div>
+          </div>
+          <p class="text-gray-600 italic">"Books changed my life growing up. Being able to contribute financially to make sure others have the same opportunity is deeply rewarding. The Book Bazaar team keeps me updated on the impact, and it's incredible."</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Collection Points Map -->
+    <section>
+      <div class="text-center mb-12">
+        <h2 class="text-2xl font-bold mb-3">
+          Collection Points
+        </h2>
+        <p class="text-gray-600 max-w-3xl mx-auto">Find your nearest book donation location. All our Book Bazaar stores accept donations during regular business hours.</p>
+      </div>
+      
+      <div class="bg-white rounded-xl overflow-hidden shadow-md">
+        <div class="aspect-w-16 aspect-h-9 h-96 bg-gray-200">
+          <!-- Embed map here -->
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d448181.163742937!2d76.8130632078731!3d28.647279935684004!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sDelhi!5e0!3m2!1sen!2sin!4v1658839017078!5m2!1sen!2sin" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
+          <!-- Location 1 -->
+          <div>
+            <h3 class="font-semibold mb-1">Book Bazaar - Central Delhi</h3>
+            <p class="text-gray-600 text-sm mb-1">123 Connaught Place, New Delhi</p>
+            <p class="text-gray-600 text-sm">Mon-Sat: 10:00 AM - 9:00 PM</p>
+          </div>
+          
+          <!-- Location 2 -->
+          <div>
+            <h3 class="font-semibold mb-1">Book Bazaar - South Extension</h3>
+            <p class="text-gray-600 text-sm mb-1">45 South Extension Part II, New Delhi</p>
+            <p class="text-gray-600 text-sm">Mon-Sat: 10:00 AM - 9:00 PM</p>
+          </div>
+          
+          <!-- Location 3 -->
+          <div>
+            <h3 class="font-semibold mb-1">Central Library</h3>
+            <p class="text-gray-600 text-sm mb-1">Near India Gate, New Delhi</p>
+            <p class="text-gray-600 text-sm">Mon-Fri: 9:00 AM - 6:00 PM</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Newsletter Section -->
+  <section class="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-3xl font-bold mb-4">Subscribe to Our Newsletter</h2>
+          <p class="text-blue-100 mb-6">Stay updated with donation drives, success stories, and how your contributions are making a difference.</p>
+        </div>
+        <div>
+          <form class="flex flex-col sm:flex-row gap-4">
+            <input type="email" placeholder="Enter your email" class="px-4 py-3 rounded-full flex-grow focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800">
+            <button type="submit" class="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-full font-medium transition duration-300">
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer would go here (copy from index.html) -->
+
+  <!-- Firebase Auth Implementation -->
+  <script type="module">
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    
+    const auth = window.auth;
+    
+    // Auth elements would be handled here (similar to index.html)
+  </script>
+</body>
+</html> 

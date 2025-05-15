@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping Cart - Book Bazaar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script> <!-- Icons -->
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3SpaaRcXlz5tyQPqsyG0KUDMlGPuy51Q",
+      authDomain: "bookbazar-c2b8f.firebaseapp.com",
+      projectId: "bookbazar-c2b8f",
+      storageBucket: "bookbazar-c2b8f.firebasestorage.app",
+      messagingSenderId: "879607459223",
+      appId: "1:879607459223:web:8d866d79bd8622a44728d2",
+      measurementId: "G-0WB4QMGTMB"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    
+    // Make auth and db available globally
+    window.auth = getAuth(app);
+    window.db = getFirestore(app);
+  </script>
+  
+  <style>
+    /* Custom styles for modern UI */
+    .nav-link {
+      position: relative;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -4px;
+      left: 0;
+      background-color: #2563eb;
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    
+    .book-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .book-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .checkout-btn {
+      transition: all 0.3s ease;
+    }
+    
+    .checkout-btn:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 transition-colors duration-300">
+
+  <!-- Navbar (simplified, you can paste your full navbar from index.html) -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Left Section: Logo -->
+        <div class="flex-shrink-0">
+          <a href="index.html" class="flex items-center">
+            <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center">
+              <i class="ph ph-books text-2xl mr-2"></i> Book Bazaar
+            </span>
+          </a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden">
+          <button id="menuToggle" class="text-2xl text-gray-700 hover:text-blue-600 transition-colors">
+            <i class="ph ph-list"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Cart Page Content -->
+  <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Shopping Cart</h1>
+      <p class="text-gray-600">Review your items before proceeding to checkout</p>
+    </div>
+
+    <!-- Empty Cart State (hidden when items exist) -->
+    <div id="emptyCart" class="hidden">
+      <div class="bg-white rounded-lg shadow p-6 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+          <i class="ph ph-shopping-cart text-blue-600 text-2xl"></i>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">Your cart is empty</h2>
+        <p class="text-gray-600 mb-4">Looks like you haven't added any books to your cart yet.</p>
+        <a href="index.html" class="inline-block bg-blue-600 text-white py-2 px-6 rounded-full font-medium hover:bg-blue-700 transition-colors">
+          Browse Books
+        </a>
+      </div>
+    </div>
+
+    <!-- Cart With Items -->
+    <div id="cartWithItems" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Cart Items (Left Column) -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Cart Items (<span id="itemCount">0</span>)</h2>
+          </div>
+          
+          <!-- Cart Items List -->
+          <div id="cartItems" class="divide-y divide-gray-200">
+            <!-- Cart Items will be dynamically inserted here -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Order Summary (Right Column) -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow">
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Order Summary</h2>
+          </div>
+          <div class="p-6 space-y-4">
+            <!-- Summary Details -->
+            <div class="flex justify-between">
+              <span class="text-gray-600">Subtotal</span>
+              <span class="text-gray-800 font-medium" id="cartSubtotal">₹0.00</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Shipping</span>
+              <span class="text-gray-800 font-medium" id="shippingCost">₹40.00</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Tax (5%)</span>
+              <span class="text-gray-800 font-medium" id="taxAmount">₹0.00</span>
+            </div>
+            <div class="border-t border-gray-200 pt-4 mt-4">
+              <div class="flex justify-between items-center">
+                <span class="text-lg font-semibold text-gray-900">Total</span>
+                <span class="text-xl font-bold text-blue-600" id="cartTotal">₹0.00</span>
+              </div>
+            </div>
+            
+            <!-- Checkout Button -->
+            <a href="checkout.html" id="checkoutButton" class="checkout-btn block w-full bg-blue-600 text-white text-center py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+              Proceed to Checkout
+            </a>
+            
+            <!-- Continue Shopping -->
+            <a href="index.html" class="block w-full text-center text-blue-600 py-2 font-medium hover:text-blue-800 transition-colors">
+              Continue Shopping
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer (simplified, you can paste your full footer from index.html) -->
+  <footer class="bg-gray-900 text-white pt-16 pb-8 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="border-t border-gray-800 pt-8 mt-12">
+        <p class="text-gray-400 text-sm text-center">&copy; 2023 Book Bazaar. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase Script to Load Cart Data -->
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, arrayRemove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const auth = window.auth;
+    const db = window.db;
+    
+    // DOM Elements
+    const emptyCartDiv = document.getElementById('emptyCart');
+    const cartWithItemsDiv = document.getElementById('cartWithItems');
+    const cartItemsContainer = document.getElementById('cartItems');
+    const itemCountElement = document.getElementById('itemCount');
+    const cartSubtotalElement = document.getElementById('cartSubtotal');
+    const taxAmountElement = document.getElementById('taxAmount');
+    const cartTotalElement = document.getElementById('cartTotal');
+    const checkoutButton = document.getElementById('checkoutButton');
+    
+    // Shipping cost (fixed for now)
+    const shippingCost = 40;
+    
+    // Check authentication state and load cart data
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Load cart data
+        try {
+          const userRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userRef);
+          
+          if (userDoc.exists() && userDoc.data().cart && userDoc.data().cart.length > 0) {
+            // We have cart items
+            emptyCartDiv.classList.add('hidden');
+            cartWithItemsDiv.classList.remove('hidden');
+            
+            const cartItems = userDoc.data().cart;
+            
+            // Update counter
+            itemCountElement.textContent = cartItems.length;
+            
+            // Clear existing items
+            cartItemsContainer.innerHTML = '';
+            
+            // Calculate subtotal
+            let subtotal = 0;
+            
+            // Add each item to the cart UI
+            cartItems.forEach((item, index) => {
+              // Calculate item total price
+              const itemPrice = parseFloat(item.price);
+              const itemTotal = itemPrice * item.quantity;
+              subtotal += itemTotal;
+              
+              // Create cart item element
+              const itemElement = document.createElement('div');
+              itemElement.className = 'p-6 flex flex-col sm:flex-row items-start sm:items-center';
+              itemElement.innerHTML = `
+                <div class="flex-shrink-0 mr-4 mb-4 sm:mb-0">
+                  <img class="w-24 h-36 object-cover rounded" src="${item.image}" alt="${item.bookName}">
+                </div>
+                <div class="flex-grow">
+                  <h3 class="text-lg font-semibold text-gray-800">${item.bookName}</h3>
+                  <div class="flex flex-wrap gap-4 mt-2 items-center">
+                    <div class="flex items-center">
+                      <button class="decrease-quantity bg-gray-100 text-gray-800 w-8 h-8 rounded-l-md flex items-center justify-center" data-index="${index}">
+                        <i class="ph ph-minus"></i>
+                      </button>
+                      <input type="number" min="1" value="${item.quantity}" class="quantity-input w-12 h-8 text-center bg-white border-y border-gray-200 focus:outline-none" data-index="${index}">
+                      <button class="increase-quantity bg-gray-100 text-gray-800 w-8 h-8 rounded-r-md flex items-center justify-center" data-index="${index}">
+                        <i class="ph ph-plus"></i>
+                      </button>
+                    </div>
+                    <span class="text-gray-500">₹${itemPrice} per item</span>
+                  </div>
+                </div>
+                <div class="flex flex-col items-end mt-4 sm:mt-0">
+                  <span class="text-lg font-semibold text-blue-600">₹${itemTotal.toFixed(2)}</span>
+                  <button class="remove-item text-sm text-red-600 hover:text-red-800 mt-2 transition-colors" data-index="${index}">
+                    <i class="ph ph-trash"></i> Remove
+                  </button>
+                </div>
+              `;
+              
+              cartItemsContainer.appendChild(itemElement);
+            });
+            
+            // Update summary
+            updateOrderSummary(subtotal);
+            
+            // Add event listeners to quantity buttons and remove buttons
+            setupCartInteractions(cartItems, userRef);
+            
+          } else {
+            // Cart is empty
+            showEmptyCart();
+          }
+        } catch (error) {
+          console.error("Error loading cart:", error);
+          showEmptyCart();
+        }
+      } else {
+        // User not logged in
+        showEmptyCart();
+        // Redirect to login page
+        checkoutButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          alert('Please login to checkout');
+          window.location.href = 'login.html';
+        });
+      }
+    });
+    
+    function showEmptyCart() {
+      emptyCartDiv.classList.remove('hidden');
+      cartWithItemsDiv.classList.add('hidden');
+    }
+    
+    function updateOrderSummary(subtotal) {
+      // Update UI elements
+      cartSubtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+      
+      // Calculate tax (5%)
+      const tax = subtotal * 0.05;
+      taxAmountElement.textContent = `₹${tax.toFixed(2)}`;
+      
+      // Calculate total
+      const total = subtotal + tax + shippingCost;
+      cartTotalElement.textContent = `₹${total.toFixed(2)}`;
+      
+      // Save cart total in session storage for checkout page
+      sessionStorage.setItem('cartSubtotal', subtotal.toFixed(2));
+      sessionStorage.setItem('cartTax', tax.toFixed(2));
+      sessionStorage.setItem('cartShipping', shippingCost.toFixed(2));
+      sessionStorage.setItem('cartTotal', total.toFixed(2));
+    }
+    
+    function setupCartInteractions(cartItems, userRef) {
+      // Quantity decrease buttons
+      document.querySelectorAll('.decrease-quantity').forEach(button => {
+        button.addEventListener('click', async () => {
+          const index = parseInt(button.dataset.index);
+          const inputElement = document.querySelector(`.quantity-input[data-index="${index}"]`);
+          let newQuantity = parseInt(inputElement.value) - 1;
+          
+          if (newQuantity >= 1) {
+            inputElement.value = newQuantity;
+            await updateCartItemQuantity(index, newQuantity, cartItems, userRef);
+          }
+        });
+      });
+      
+      // Quantity increase buttons
+      document.querySelectorAll('.increase-quantity').forEach(button => {
+        button.addEventListener('click', async () => {
+          const index = parseInt(button.dataset.index);
+          const inputElement = document.querySelector(`.quantity-input[data-index="${index}"]`);
+          let newQuantity = parseInt(inputElement.value) + 1;
+          
+          inputElement.value = newQuantity;
+          await updateCartItemQuantity(index, newQuantity, cartItems, userRef);
+        });
+      });
+      
+      // Direct quantity input
+      document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', async () => {
+          const index = parseInt(input.dataset.index);
+          let newQuantity = parseInt(input.value);
+          
+          if (newQuantity < 1) {
+            newQuantity = 1;
+            input.value = 1;
+          }
+          
+          await updateCartItemQuantity(index, newQuantity, cartItems, userRef);
+        });
+      });
+      
+      // Remove item buttons
+      document.querySelectorAll('.remove-item').forEach(button => {
+        button.addEventListener('click', async () => {
+          const index = parseInt(button.dataset.index);
+          await removeCartItem(index, cartItems, userRef);
+        });
+      });
+    }
+    
+    async function updateCartItemQuantity(index, newQuantity, cartItems, userRef) {
+      try {
+        // Create a copy of the cart items with the updated quantity
+        const updatedCartItems = [...cartItems];
+        updatedCartItems[index].quantity = newQuantity;
+        
+        // Update in Firebase
+        await updateDoc(userRef, {
+          cart: updatedCartItems
+        });
+        
+        // Recalculate and update UI
+        let subtotal = 0;
+        updatedCartItems.forEach(item => {
+          subtotal += parseFloat(item.price) * item.quantity;
+        });
+        
+        // Update item price display
+        const itemElement = document.querySelector(`.quantity-input[data-index="${index}"]`).closest('.p-6');
+        const priceDisplay = itemElement.querySelector('.text-lg.font-semibold.text-blue-600');
+        const itemPrice = parseFloat(updatedCartItems[index].price) * newQuantity;
+        priceDisplay.textContent = `₹${itemPrice.toFixed(2)}`;
+        
+        // Update order summary
+        updateOrderSummary(subtotal);
+        
+      } catch (error) {
+        console.error("Error updating quantity:", error);
+        alert("Failed to update quantity. Please try again.");
+      }
+    }
+    
+    async function removeCartItem(index, cartItems, userRef) {
+      try {
+        const itemToRemove = cartItems[index];
+        
+        // Remove from Firebase (using arrayRemove)
+        await updateDoc(userRef, {
+          cart: arrayRemove(itemToRemove)
+        });
+        
+        // Remove from UI
+        const itemElement = document.querySelector(`.remove-item[data-index="${index}"]`).closest('.p-6');
+        itemElement.remove();
+        
+        // Update item count
+        const newCount = parseInt(itemCountElement.textContent) - 1;
+        itemCountElement.textContent = newCount;
+        
+        // If cart is now empty, show empty state
+        if (newCount === 0) {
+          showEmptyCart();
+          return;
+        }
+        
+        // Recalculate summary
+        let subtotal = 0;
+        const updatedCart = cartItems.filter((_, i) => i !== index);
+        updatedCart.forEach(item => {
+          subtotal += parseFloat(item.price) * item.quantity;
+        });
+        
+        updateOrderSummary(subtotal);
+        
+      } catch (error) {
+        console.error("Error removing item:", error);
+        alert("Failed to remove item. Please try again.");
+      }
+    }
+  </script>
+</body>
+</html> 

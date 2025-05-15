@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Confirmation - Book Bazaar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script> <!-- Icons -->
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3SpaaRcXlz5tyQPqsyG0KUDMlGPuy51Q",
+      authDomain: "bookbazar-c2b8f.firebaseapp.com",
+      projectId: "bookbazar-c2b8f",
+      storageBucket: "bookbazar-c2b8f.firebasestorage.app",
+      messagingSenderId: "879607459223",
+      appId: "1:879607459223:web:8d866d79bd8622a44728d2",
+      measurementId: "G-0WB4QMGTMB"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    
+    // Make auth and db available globally
+    window.auth = getAuth(app);
+    window.db = getFirestore(app);
+  </script>
+  
+  <style>
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #3b82f6;
+      animation: confetti-fall 3s ease-in-out forwards;
+      z-index: 1;
+    }
+    
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(600px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 transition-colors duration-300">
+
+  <!-- Navbar (simplified, you can paste your full navbar from index.html) -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Left Section: Logo -->
+        <div class="flex-shrink-0">
+          <a href="index.html" class="flex items-center">
+            <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center">
+              <i class="ph ph-books text-2xl mr-2"></i> Book Bazaar
+            </span>
+          </a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden">
+          <button id="menuToggle" class="text-2xl text-gray-700 hover:text-blue-600 transition-colors">
+            <i class="ph ph-list"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Checkout Progress -->
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-center">
+        <ol class="flex items-center w-full max-w-3xl">
+          <li class="flex items-center text-blue-600 font-medium">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm mr-2">1</span>
+            <span>Cart</span>
+            <i class="ph ph-caret-right mx-4 text-gray-400"></i>
+          </li>
+          <li class="flex items-center text-blue-600 font-medium">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm mr-2">2</span>
+            <span>Checkout</span>
+            <i class="ph ph-caret-right mx-4 text-gray-400"></i>
+          </li>
+          <li class="flex items-center text-blue-600 font-medium">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm mr-2">3</span>
+            <span>Confirmation</span>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Confirmation Content -->
+  <div class="max-w-3xl mx-auto px-4 py-12 sm:px-6 lg:px-8 relative">
+    <!-- Confetti elements will be added dynamically by JavaScript -->
+    <div id="confettiContainer"></div>
+    
+    <!-- Success Message -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden text-center p-8 mb-8 relative z-10">
+      <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+        <i class="ph ph-check-circle text-green-600 text-5xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+      <p class="text-gray-600 mb-6">Thank you for your purchase. Your order has been successfully placed.</p>
+      
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+        <div class="flex items-center">
+          <i class="ph ph-identification-card text-blue-600 mr-2"></i>
+          <span class="text-gray-700 font-medium">Order ID: <span id="orderId" class="font-mono">loading...</span></span>
+        </div>
+        <div class="flex items-center">
+          <i class="ph ph-calendar text-blue-600 mr-2"></i>
+          <span class="text-gray-700 font-medium">Date: <span id="orderDate">loading...</span></span>
+        </div>
+      </div>
+      
+      <div class="flex flex-wrap gap-4 justify-center">
+        <a href="index.html" class="bg-blue-600 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-700 transition-colors inline-flex items-center">
+          <i class="ph ph-books-open mr-2"></i> Continue Shopping
+        </a>
+        <a href="#" id="viewOrderButton" class="bg-gray-100 text-gray-800 px-6 py-3 rounded-full font-medium hover:bg-gray-200 transition-colors inline-flex items-center">
+          <i class="ph ph-article mr-2"></i> View Order Details
+        </a>
+      </div>
+    </div>
+
+    <!-- Order Details -->
+    <div id="orderDetails" class="bg-white rounded-lg shadow-lg overflow-hidden mb-8 hidden">
+      <div class="p-6 border-b border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-800">Order Details</h2>
+      </div>
+      
+      <!-- Order Items -->
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">Items</h3>
+        <div id="orderItems" class="divide-y divide-gray-200">
+          <!-- Order items will be added here -->
+        </div>
+      </div>
+      
+      <!-- Shipping Information -->
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">Shipping Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-gray-600 text-sm">Name</p>
+            <p id="shippingName" class="text-gray-900 font-medium">loading...</p>
+          </div>
+          <div>
+            <p class="text-gray-600 text-sm">Email</p>
+            <p id="shippingEmail" class="text-gray-900 font-medium">loading...</p>
+          </div>
+          <div>
+            <p class="text-gray-600 text-sm">Phone</p>
+            <p id="shippingPhone" class="text-gray-900 font-medium">loading...</p>
+          </div>
+          <div>
+            <p class="text-gray-600 text-sm">Address</p>
+            <p id="shippingAddress" class="text-gray-900 font-medium">loading...</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Payment Information -->
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">Payment Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-gray-600 text-sm">Payment Method</p>
+            <p id="paymentMethod" class="text-gray-900 font-medium">loading...</p>
+          </div>
+          <div id="paymentDetailsContainer">
+            <p class="text-gray-600 text-sm">Details</p>
+            <p id="paymentDetails" class="text-gray-900 font-medium">loading...</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Order Summary -->
+      <div class="p-6 bg-gray-50">
+        <h3 class="text-lg font-medium text-gray-800 mb-4">Order Summary</h3>
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Subtotal</span>
+            <span id="summarySubtotal" class="text-gray-800 font-medium">₹0.00</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Shipping</span>
+            <span id="summaryShipping" class="text-gray-800 font-medium">₹0.00</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Tax</span>
+            <span id="summaryTax" class="text-gray-800 font-medium">₹0.00</span>
+          </div>
+          <div class="border-t border-gray-200 pt-2 mt-2">
+            <div class="flex justify-between">
+              <span class="text-gray-900 font-semibold">Total</span>
+              <span id="summaryTotal" class="text-blue-600 font-bold">₹0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Additional Information -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden p-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">What's Next?</h2>
+      <div class="space-y-4">
+        <div class="flex">
+          <div class="flex-shrink-0 mr-3">
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <span class="text-blue-600 font-medium">1</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-medium text-gray-800">Order Processing</h3>
+            <p class="text-gray-600">We're processing your order and will send you an email confirmation shortly.</p>
+          </div>
+        </div>
+        
+        <div class="flex">
+          <div class="flex-shrink-0 mr-3">
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <span class="text-blue-600 font-medium">2</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-medium text-gray-800">Shipping</h3>
+            <p class="text-gray-600">Your books will be packaged and shipped within 1-2 business days.</p>
+          </div>
+        </div>
+        
+        <div class="flex">
+          <div class="flex-shrink-0 mr-3">
+            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <span class="text-blue-600 font-medium">3</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-medium text-gray-800">Delivery</h3>
+            <p class="text-gray-600">Expected delivery within 3-5 business days. You'll receive tracking information via email.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <p class="text-gray-600 text-center">Need help with your order? <a href="contact.html" class="text-blue-600 hover:text-blue-800 font-medium">Contact our support team</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer (simplified, you can paste your full footer from index.html) -->
+  <footer class="bg-gray-900 text-white pt-16 pb-8 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="border-t border-gray-800 pt-8 mt-12">
+        <p class="text-gray-400 text-sm text-center">&copy; 2023 Book Bazaar. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase Script to Load Order Data -->
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const auth = window.auth;
+    const db = window.db;
+    
+    // DOM Elements
+    const orderIdElement = document.getElementById('orderId');
+    const orderDateElement = document.getElementById('orderDate');
+    const orderDetailsSection = document.getElementById('orderDetails');
+    const viewOrderButton = document.getElementById('viewOrderButton');
+    const orderItemsContainer = document.getElementById('orderItems');
+    const shippingNameElement = document.getElementById('shippingName');
+    const shippingEmailElement = document.getElementById('shippingEmail');
+    const shippingPhoneElement = document.getElementById('shippingPhone');
+    const shippingAddressElement = document.getElementById('shippingAddress');
+    const paymentMethodElement = document.getElementById('paymentMethod');
+    const paymentDetailsElement = document.getElementById('paymentDetails');
+    const paymentDetailsContainer = document.getElementById('paymentDetailsContainer');
+    const summarySubtotalElement = document.getElementById('summarySubtotal');
+    const summaryShippingElement = document.getElementById('summaryShipping');
+    const summaryTaxElement = document.getElementById('summaryTax');
+    const summaryTotalElement = document.getElementById('summaryTotal');
+    const confettiContainer = document.getElementById('confettiContainer');
+    
+    // Toggle order details
+    viewOrderButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      orderDetailsSection.classList.toggle('hidden');
+      viewOrderButton.textContent = orderDetailsSection.classList.contains('hidden') 
+        ? 'View Order Details' 
+        : 'Hide Order Details';
+    });
+    
+    // Function to create confetti animation
+    function createConfetti() {
+      const colors = ['#3b82f6', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6'];
+      
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.left = `${Math.random() * 100}%`;
+        confetti.style.width = `${Math.random() * 10 + 5}px`;
+        confetti.style.height = `${Math.random() * 10 + 5}px`;
+        confetti.style.opacity = Math.random();
+        confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+        confetti.style.animationDelay = `${Math.random() * 2}s`;
+        
+        confettiContainer.appendChild(confetti);
+      }
+    }
+    
+    // Create confetti animation when page loads
+    createConfetti();
+    
+    // Check authentication state and load order data
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Get order ID from session storage
+        const orderId = sessionStorage.getItem('lastOrderId');
+        
+        if (orderId) {
+          orderIdElement.textContent = orderId;
+          
+          try {
+            // Get order data from Firestore
+            const orderRef = doc(db, "orders", orderId);
+            const orderDoc = await getDoc(orderRef);
+            
+            if (orderDoc.exists()) {
+              const orderData = orderDoc.data();
+              
+              // Set order date
+              const orderDate = orderData.createdAt ? new Date(orderData.createdAt.toDate()) : new Date();
+              orderDateElement.textContent = orderDate.toLocaleDateString();
+              
+              // Populate order items
+              if (orderData.items && orderData.items.length > 0) {
+                orderItemsContainer.innerHTML = '';
+                
+                orderData.items.forEach(item => {
+                  const itemElement = document.createElement('div');
+                  itemElement.className = 'flex items-center py-4';
+                  itemElement.innerHTML = `
+                    <img src="${item.image}" alt="${item.bookName}" class="w-12 h-16 object-cover rounded mr-4">
+                    <div class="flex-grow">
+                      <h4 class="text-gray-800 font-medium">${item.bookName}</h4>
+                      <p class="text-gray-500 text-sm">Quantity: ${item.quantity}</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-gray-800 font-medium">₹${(parseFloat(item.price) * item.quantity).toFixed(2)}</p>
+                      <p class="text-gray-500 text-sm">₹${parseFloat(item.price).toFixed(2)} each</p>
+                    </div>
+                  `;
+                  
+                  orderItemsContainer.appendChild(itemElement);
+                });
+              }
+              
+              // Populate shipping information
+              if (orderData.shippingAddress) {
+                const { firstName, lastName, email, phone, street, city, state, pincode } = orderData.shippingAddress;
+                shippingNameElement.textContent = `${firstName} ${lastName}`;
+                shippingEmailElement.textContent = email;
+                shippingPhoneElement.textContent = phone;
+                shippingAddressElement.textContent = `${street}, ${city}, ${state} - ${pincode}`;
+              }
+              
+              // Populate payment information
+              if (orderData.paymentMethod) {
+                const method = orderData.paymentMethod;
+                
+                if (method === 'card') {
+                  paymentMethodElement.textContent = 'Credit/Debit Card';
+                  if (orderData.paymentDetails && orderData.paymentDetails.cardNumber) {
+                    const lastFour = orderData.paymentDetails.cardNumber.slice(-4);
+                    paymentDetailsElement.textContent = `Card ending in ${lastFour}`;
+                  }
+                } else if (method === 'upi') {
+                  paymentMethodElement.textContent = 'UPI';
+                  if (orderData.paymentDetails && orderData.paymentDetails.upiId) {
+                    paymentDetailsElement.textContent = orderData.paymentDetails.upiId;
+                  }
+                } else if (method === 'cod') {
+                  paymentMethodElement.textContent = 'Cash on Delivery';
+                  paymentDetailsContainer.classList.add('hidden');
+                }
+              }
+              
+              // Populate order summary
+              summarySubtotalElement.textContent = `₹${parseFloat(orderData.subtotal).toFixed(2)}`;
+              summaryShippingElement.textContent = `₹${parseFloat(orderData.shipping).toFixed(2)}`;
+              summaryTaxElement.textContent = `₹${parseFloat(orderData.tax).toFixed(2)}`;
+              summaryTotalElement.textContent = `₹${parseFloat(orderData.total).toFixed(2)}`;
+            }
+          } catch (error) {
+            console.error("Error loading order:", error);
+          }
+        } else {
+          // No order ID in session storage, redirect to homepage
+          window.location.href = 'index.html';
+        }
+      } else {
+        // User not logged in, redirect to homepage
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+</body>
+</html> 

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Used Books - Book Bazaar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script> <!-- Icons -->
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3SpaaRcXlz5tyQPqsyG0KUDMlGPuy51Q",
+      authDomain: "bookbazar-c2b8f.firebaseapp.com",
+      projectId: "bookbazar-c2b8f",
+      storageBucket: "bookbazar-c2b8f.firebasestorage.app",
+      messagingSenderId: "879607459223",
+      appId: "1:879607459223:web:8d866d79bd8622a44728d2",
+      measurementId: "G-0WB4QMGTMB"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    
+    // Make auth and db available globally
+    window.auth = getAuth(app);
+    window.db = getFirestore(app);
+  </script>
+  
+  <style>
+    /* Custom styles for modern UI */
+    .nav-link {
+      position: relative;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -4px;
+      left: 0;
+      background-color: #2563eb;
+      transition: width 0.3s ease;
+    }
+    
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    
+    .book-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .book-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .buy-now-btn, .cart-btn {
+      transition: all 0.3s ease;
+    }
+    
+    .buy-now-btn:hover, .cart-btn:hover {
+      transform: scale(1.05);
+    }
+    
+    /* Dark mode specific styles */
+    .dark {
+      color-scheme: dark;
+    }
+    
+    .dark .book-card {
+      background: #1f2937;
+      border-color: #374151;
+    }
+    
+    .dark .book-card h2, .dark .book-card h3 {
+      color: #f3f4f6;
+    }
+    
+    .dark .book-card p {
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 transition-colors duration-300">
+
+  <!-- Navbar (you would include the same navbar from index.html) -->
+  <!-- For brevity, I'm not including it here but you should copy it from index.html -->
+
+  <!-- Page Header -->
+  <div class="bg-gradient-to-r from-green-600 to-teal-600 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold">Used Books</h1>
+          <p class="mt-2 text-green-100">Great books at great prices - gently used and lovingly passed on</p>
+        </div>
+        <div class="mt-4 md:mt-0">
+          <div class="flex space-x-2 items-center bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+            <span>Sort by:</span>
+            <select class="bg-transparent border-none text-white focus:outline-none focus:ring-0">
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="condition">Condition</option>
+              <option value="bestselling">Bestselling</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Breadcrumbs -->
+  <div class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div class="flex items-center space-x-2 text-sm text-gray-500">
+        <a href="index.html" class="hover:text-green-600 transition-colors">Home</a>
+        <i class="ph ph-caret-right text-xs"></i>
+        <span class="text-gray-900 font-medium">Used Books</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Used Book Banner -->
+    <div class="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl mb-10 p-6 md:p-8 relative overflow-hidden">
+      <div class="absolute right-0 top-0 h-full w-1/3 bg-contain bg-right-top bg-no-repeat opacity-10" style="background-image: url('https://images.unsplash.com/photo-1495446815901-a7297e633e8d')"></div>
+      <div class="md:max-w-xl relative z-10">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Sustainable Reading</h2>
+        <p class="text-gray-600 mb-4">Our used books are carefully inspected to ensure they're in great condition. By purchasing pre-loved books, you're making an eco-friendly choice that reduces waste and gives these stories a second life.</p>
+        <div class="flex flex-wrap gap-3">
+          <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            <i class="ph ph-check-circle mr-1"></i> Quality Checked
+          </span>
+          <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            <i class="ph ph-leaf mr-1"></i> Eco-Friendly
+          </span>
+          <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            <i class="ph ph-currency-inr mr-1"></i> Great Value
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <!-- Filters Sidebar -->
+      <div class="hidden md:block">
+        <div class="bg-white p-6 rounded-lg shadow-sm">
+          <h3 class="font-bold text-lg mb-4">Filters</h3>
+          
+          <!-- Category Filter -->
+          <div class="mb-6">
+            <h4 class="font-medium text-sm text-gray-500 uppercase mb-3">Categories</h4>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Fiction</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Non-Fiction</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Children's Books</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Science & Technology</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Rare & Collectible</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Condition Filter -->
+          <div class="mb-6">
+            <h4 class="font-medium text-sm text-gray-500 uppercase mb-3">Condition</h4>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Like New</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Very Good</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Good</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="rounded text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Acceptable</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Price Filter -->
+          <div>
+            <h4 class="font-medium text-sm text-gray-500 uppercase mb-3">Price Range</h4>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="radio" name="price" class="text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Under ₹150</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="price" class="text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">₹150 - ₹300</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="price" class="text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">₹300 - ₹500</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="price" class="text-green-600 focus:ring-green-500 h-4 w-4">
+                <span class="ml-2 text-gray-700">Above ₹500</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Products Grid -->
+      <div class="md:col-span-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Used Book 1 -->
+          <div class="book-card bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300">
+            <div class="relative overflow-hidden group">
+              <span class="absolute top-3 left-3 bg-green-600 text-white text-xs px-2 py-1 rounded-full z-10">
+                Like New
+              </span>
+              <img class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110" 
+                src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e" 
+                alt="Book Cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                <p class="text-sm">A classic novel that explores the struggles of human existence. This copy is in excellent condition with minimal wear.</p>
+                <button class="mt-3 bg-white text-green-600 px-3 py-1 rounded-full text-xs font-medium">View Details</button>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-2">
+                <div class="flex text-yellow-400">
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-half"></i>
+                </div>
+                <span class="text-gray-500 text-xs ml-2">4.5 (120 reviews)</span>
+              </div>
+              <h2 class="text-lg font-semibold text-gray-800">Crime and Punishment</h2>
+              <p class="text-sm text-gray-500 mt-1">by Fyodor Dostoevsky</p>
+              <div class="flex items-center justify-between mt-4">
+                <div>
+                  <span class="text-green-600 font-bold text-lg">₹199</span>
+                  <span class="text-gray-400 text-sm ml-2">(₹599 new)</span>
+                </div>
+                <button class="cart-btn bg-green-600 text-white px-3 py-1.5 rounded-full text-sm hover:bg-green-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Used Book 2 -->
+          <div class="book-card bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300">
+            <div class="relative overflow-hidden group">
+              <span class="absolute top-3 left-3 bg-yellow-600 text-white text-xs px-2 py-1 rounded-full z-10">
+                Good
+              </span>
+              <img class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110" 
+                src="https://images.unsplash.com/photo-1544947950-fa07a98d237f" 
+                alt="Book Cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                <p class="text-sm">Jane Austen's beloved comedy about finding your equal and earning your happy ending. Some highlighting inside.</p>
+                <button class="mt-3 bg-white text-green-600 px-3 py-1 rounded-full text-xs font-medium">View Details</button>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-2">
+                <div class="flex text-yellow-400">
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star"></i>
+                </div>
+                <span class="text-gray-500 text-xs ml-2">4.0 (85 reviews)</span>
+              </div>
+              <h2 class="text-lg font-semibold text-gray-800">Pride and Prejudice</h2>
+              <p class="text-sm text-gray-500 mt-1">by Jane Austen</p>
+              <div class="flex items-center justify-between mt-4">
+                <div>
+                  <span class="text-green-600 font-bold text-lg">₹149</span>
+                  <span class="text-gray-400 text-sm ml-2">(₹399 new)</span>
+                </div>
+                <button class="cart-btn bg-green-600 text-white px-3 py-1.5 rounded-full text-sm hover:bg-green-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Used Book 3 -->
+          <div class="book-card bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300">
+            <div class="relative overflow-hidden group">
+              <span class="absolute top-3 left-3 bg-purple-600 text-white text-xs px-2 py-1 rounded-full z-10">
+                Rare Find
+              </span>
+              <img class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110" 
+                src="https://images.unsplash.com/photo-1532012197267-da84d127e765" 
+                alt="Book Cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                <p class="text-sm">An older edition in good condition with authentic vintage charm. A rare find for collectors.</p>
+                <button class="mt-3 bg-white text-green-600 px-3 py-1 rounded-full text-xs font-medium">View Details</button>
+              </div>
+            </div>
+            <div class="p-5">
+              <div class="flex items-center mb-2">
+                <div class="flex text-yellow-400">
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star"></i>
+                </div>
+                <span class="text-gray-500 text-xs ml-2">4.0 (42 reviews)</span>
+              </div>
+              <h2 class="text-lg font-semibold text-gray-800">To Kill a Mockingbird</h2>
+              <p class="text-sm text-gray-500 mt-1">by Harper Lee (1975 Edition)</p>
+              <div class="flex items-center justify-between mt-4">
+                <div>
+                  <span class="text-green-600 font-bold text-lg">₹379</span>
+                  <span class="text-gray-400 text-sm ml-2">(Collectible)</span>
+                </div>
+                <button class="cart-btn bg-green-600 text-white px-3 py-1.5 rounded-full text-sm hover:bg-green-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- More books would go here -->
+        </div>
+        
+        <!-- Pagination -->
+        <div class="mt-12 flex justify-center">
+          <nav class="inline-flex rounded-md shadow">
+            <a href="#" class="px-3 py-2 rounded-l-md bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <i class="ph ph-caret-left"></i>
+            </a>
+            <a href="#" class="px-3 py-2 bg-green-600 text-sm font-medium text-white">1</a>
+            <a href="#" class="px-3 py-2 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">2</a>
+            <a href="#" class="px-3 py-2 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">3</a>
+            <span class="px-3 py-2 bg-white text-sm font-medium text-gray-500">...</span>
+            <a href="#" class="px-3 py-2 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">8</a>
+            <a href="#" class="px-3 py-2 rounded-r-md bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <i class="ph ph-caret-right"></i>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sell Your Books Section -->
+  <section class="bg-green-50 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <span class="bg-green-100 text-green-700 text-sm font-medium px-3 py-1 rounded-full">Book Buyback Program</span>
+          <h2 class="text-3xl font-bold mt-4 mb-4">Sell Your Used Books to Us</h2>
+          <p class="text-gray-600 mb-6">Have books you no longer need? We buy gently used books in good condition. Turn your old books into cash or store credit!</p>
+          
+          <ul class="space-y-3">
+            <li class="flex items-start">
+              <i class="ph ph-check-circle text-green-600 mt-1 mr-2"></i>
+              <span class="text-gray-700">Fair prices based on condition and demand</span>
+            </li>
+            <li class="flex items-start">
+              <i class="ph ph-check-circle text-green-600 mt-1 mr-2"></i>
+              <span class="text-gray-700">Get 10% more value with store credit option</span>
+            </li>
+            <li class="flex items-start">
+              <i class="ph ph-check-circle text-green-600 mt-1 mr-2"></i>
+              <span class="text-gray-700">Quick evaluation process in our stores</span>
+            </li>
+            <li class="flex items-start">
+              <i class="ph ph-check-circle text-green-600 mt-1 mr-2"></i>
+              <span class="text-gray-700">Support sustainable reading practices</span>
+            </li>
+          </ul>
+          
+          <div class="mt-8">
+            <a href="#" class="bg-green-600 text-white font-medium px-6 py-3 rounded-full hover:bg-green-700 transition duration-300 inline-flex items-center">
+              Learn More About Selling <i class="ph ph-arrow-right ml-2"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div class="relative hidden lg:block">
+          <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570" alt="Stack of books" class="rounded-xl shadow-lg">
+          <div class="absolute -bottom-6 -left-6 bg-white rounded-lg shadow-lg p-4 max-w-xs">
+            <div class="flex items-center mb-2">
+              <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Customer" class="w-10 h-10 rounded-full mr-3">
+              <div>
+                <p class="font-medium text-gray-900">Meera S.</p>
+                <div class="flex text-yellow-400 text-xs">
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                  <i class="ph ph-star-fill"></i>
+                </div>
+              </div>
+            </div>
+            <p class="text-gray-600 text-sm">"I sold my college textbooks to Book Bazaar and got great value for them. The process was quick and hassle-free!"</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter Section -->
+  <section class="py-16 bg-gradient-to-r from-green-600 to-teal-600 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-3xl font-bold mb-4">Subscribe to Our Newsletter</h2>
+          <p class="text-green-100 mb-6">Stay updated with the latest used book arrivals, special offers on pre-loved books, and sustainable reading tips.</p>
+        </div>
+        <div>
+          <form class="flex flex-col sm:flex-row gap-4">
+            <input type="email" placeholder="Enter your email" class="px-4 py-3 rounded-full flex-grow focus:outline-none focus:ring-2 focus:ring-teal-300 text-gray-800">
+            <button type="submit" class="bg-white text-green-600 hover:bg-green-50 px-6 py-3 rounded-full font-medium transition duration-300">
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer would go here (copy from index.html) -->
+
+  <!-- Firebase Auth Implementation -->
+  <script type="module">
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    
+    const auth = window.auth;
+    
+    // Auth elements would be handled here (similar to index.html)
+  </script>
+</body>
+</html> 

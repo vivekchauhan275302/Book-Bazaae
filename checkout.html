@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout - Book Bazaar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script> <!-- Icons -->
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3SpaaRcXlz5tyQPqsyG0KUDMlGPuy51Q",
+      authDomain: "bookbazar-c2b8f.firebaseapp.com",
+      projectId: "bookbazar-c2b8f",
+      storageBucket: "bookbazar-c2b8f.firebasestorage.app",
+      messagingSenderId: "879607459223",
+      appId: "1:879607459223:web:8d866d79bd8622a44728d2",
+      measurementId: "G-0WB4QMGTMB"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    
+    // Make auth and db available globally
+    window.auth = getAuth(app);
+    window.db = getFirestore(app);
+  </script>
+  
+  <style>
+    /* Custom styles for modern UI */
+    .form-input:focus,
+    .form-select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .place-order-btn {
+      transition: all 0.3s ease;
+    }
+    
+    .place-order-btn:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 transition-colors duration-300">
+
+  <!-- Navbar (simplified, you can paste your full navbar from index.html) -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Left Section: Logo -->
+        <div class="flex-shrink-0">
+          <a href="index.html" class="flex items-center">
+            <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center">
+              <i class="ph ph-books text-2xl mr-2"></i> Book Bazaar
+            </span>
+          </a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden">
+          <button id="menuToggle" class="text-2xl text-gray-700 hover:text-blue-600 transition-colors">
+            <i class="ph ph-list"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Checkout Progress -->
+  <div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-center">
+        <ol class="flex items-center w-full max-w-3xl">
+          <li class="flex items-center text-blue-600 font-medium">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm mr-2">1</span>
+            <span>Cart</span>
+            <i class="ph ph-caret-right mx-4 text-gray-400"></i>
+          </li>
+          <li class="flex items-center text-blue-600 font-medium">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-sm mr-2">2</span>
+            <span>Checkout</span>
+            <i class="ph ph-caret-right mx-4 text-gray-400"></i>
+          </li>
+          <li class="flex items-center text-gray-400">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-600 text-sm mr-2">3</span>
+            <span>Confirmation</span>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout Page Content -->
+  <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">Checkout</h1>
+      <p class="text-gray-600">Complete your purchase by providing shipping and payment details</p>
+    </div>
+
+    <!-- Main Checkout Form -->
+    <form id="checkoutForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Left Column: Shipping & Payment -->
+      <div class="lg:col-span-2 space-y-8">
+        <!-- Shipping Information -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Shipping Information</h2>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <input type="text" id="firstName" name="firstName" required
+                  class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+              </div>
+              <div>
+                <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <input type="text" id="lastName" name="lastName" required
+                  class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+              </div>
+            </div>
+            
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <input type="email" id="email" name="email" required
+                class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+            </div>
+            
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <input type="tel" id="phone" name="phone" required
+                class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+            </div>
+            
+            <div>
+              <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input type="text" id="address" name="address" required
+                class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <input type="text" id="city" name="city" required
+                  class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+              </div>
+              <div>
+                <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                <select id="state" name="state" required
+                  class="form-select w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+                  <option value="">Select State</option>
+                  <option value="AP">Andhra Pradesh</option>
+                  <option value="AR">Arunachal Pradesh</option>
+                  <option value="AS">Assam</option>
+                  <option value="BR">Bihar</option>
+                  <option value="CT">Chhattisgarh</option>
+                  <option value="GA">Goa</option>
+                  <option value="GJ">Gujarat</option>
+                  <option value="HR">Haryana</option>
+                  <option value="HP">Himachal Pradesh</option>
+                  <option value="JH">Jharkhand</option>
+                  <option value="KA">Karnataka</option>
+                  <option value="KL">Kerala</option>
+                  <option value="MP">Madhya Pradesh</option>
+                  <option value="MH">Maharashtra</option>
+                  <option value="MN">Manipur</option>
+                  <option value="ML">Meghalaya</option>
+                  <option value="MZ">Mizoram</option>
+                  <option value="NL">Nagaland</option>
+                  <option value="OR">Odisha</option>
+                  <option value="PB">Punjab</option>
+                  <option value="RJ">Rajasthan</option>
+                  <option value="SK">Sikkim</option>
+                  <option value="TN">Tamil Nadu</option>
+                  <option value="TG">Telangana</option>
+                  <option value="TR">Tripura</option>
+                  <option value="UT">Uttarakhand</option>
+                  <option value="UP">Uttar Pradesh</option>
+                  <option value="WB">West Bengal</option>
+                  <option value="DL">Delhi</option>
+                </select>
+              </div>
+              <div>
+                <label for="pincode" class="block text-sm font-medium text-gray-700 mb-1">PIN Code</label>
+                <input type="text" id="pincode" name="pincode" required
+                  class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Information -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Payment Method</h2>
+          </div>
+          <div class="p-6 space-y-4">
+            <!-- Payment Options -->
+            <div class="space-y-4">
+              <div class="flex items-center">
+                <input type="radio" id="card" name="paymentMethod" value="card" checked
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                <label for="card" class="ml-2 flex items-center">
+                  <span class="font-medium text-gray-800 mr-2">Credit/Debit Card</span>
+                  <div class="flex gap-1">
+                    <i class="ph ph-credit-card text-blue-600"></i>
+                    <i class="ph ph-credit-card text-gray-500"></i>
+                    <i class="ph ph-credit-card text-gray-500"></i>
+                  </div>
+                </label>
+              </div>
+              
+              <div class="flex items-center">
+                <input type="radio" id="upi" name="paymentMethod" value="upi"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                <label for="upi" class="ml-2 flex items-center">
+                  <span class="font-medium text-gray-800 mr-2">UPI</span>
+                  <i class="ph ph-money text-green-600"></i>
+                </label>
+              </div>
+              
+              <div class="flex items-center">
+                <input type="radio" id="cod" name="paymentMethod" value="cod"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                <label for="cod" class="ml-2 flex items-center">
+                  <span class="font-medium text-gray-800 mr-2">Cash on Delivery</span>
+                  <i class="ph ph-currency-inr text-yellow-600"></i>
+                </label>
+              </div>
+            </div>
+            
+            <!-- Card Details (shown when card is selected) -->
+            <div id="cardDetails" class="mt-6 space-y-4">
+              <div>
+                <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456"
+                  class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="expiry" class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                  <input type="text" id="expiry" name="expiry" placeholder="MM/YY"
+                    class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+                </div>
+                <div>
+                  <label for="cvv" class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                  <input type="text" id="cvv" name="cvv" placeholder="123"
+                    class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+                </div>
+              </div>
+              
+              <div>
+                <label for="nameOnCard" class="block text-sm font-medium text-gray-700 mb-1">Name on Card</label>
+                <input type="text" id="nameOnCard" name="nameOnCard"
+                  class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+              </div>
+            </div>
+            
+            <!-- UPI Details (hidden initially) -->
+            <div id="upiDetails" class="mt-6 space-y-4 hidden">
+              <div>
+                <label for="upiId" class="block text-sm font-medium text-gray-700 mb-1">UPI ID</label>
+                <input type="text" id="upiId" name="upiId" placeholder="name@upi"
+                  class="form-input w-full rounded-lg border-gray-300 shadow-sm focus:outline-none">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Column: Order Summary -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow sticky top-24">
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">Order Summary</h2>
+          </div>
+          <div class="p-6 space-y-4">
+            <!-- Order Items Summary (collapsed view) -->
+            <div class="border-b border-gray-200 pb-4">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-700 font-medium">Items (<span id="itemCount">0</span>)</span>
+                <button type="button" id="toggleOrderDetails" class="text-blue-600 text-sm hover:text-blue-800">
+                  Show details
+                </button>
+              </div>
+              
+              <!-- Order Items List (hidden initially) -->
+              <div id="orderItemsList" class="hidden mt-3 space-y-3">
+                <!-- Dynamically populated with order items -->
+              </div>
+            </div>
+            
+            <!-- Summary Details -->
+            <div class="flex justify-between">
+              <span class="text-gray-600">Subtotal</span>
+              <span class="text-gray-800 font-medium" id="subtotalAmount">₹0.00</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Shipping</span>
+              <span class="text-gray-800 font-medium" id="shippingAmount">₹40.00</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Tax (5%)</span>
+              <span class="text-gray-800 font-medium" id="taxAmount">₹0.00</span>
+            </div>
+            <div class="border-t border-gray-200 pt-4 mt-4">
+              <div class="flex justify-between items-center">
+                <span class="text-lg font-semibold text-gray-900">Total</span>
+                <span class="text-xl font-bold text-blue-600" id="totalAmount">₹0.00</span>
+              </div>
+            </div>
+            
+            <!-- Place Order Button -->
+            <button type="submit" class="place-order-btn block w-full bg-blue-600 text-white text-center py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+              Place Order
+            </button>
+            
+            <!-- Return to Cart -->
+            <a href="cart.html" class="block w-full text-center text-blue-600 py-2 font-medium hover:text-blue-800 transition-colors">
+              Return to Cart
+            </a>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Footer (simplified, you can paste your full footer from index.html) -->
+  <footer class="bg-gray-900 text-white pt-16 pb-8 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="border-t border-gray-800 pt-8 mt-12">
+        <p class="text-gray-400 text-sm text-center">&copy; 2023 Book Bazaar. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase Script to Handle Checkout -->
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, serverTimestamp, arrayRemove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    const auth = window.auth;
+    const db = window.db;
+    
+    // DOM Elements
+    const itemCountElement = document.getElementById('itemCount');
+    const orderItemsList = document.getElementById('orderItemsList');
+    const toggleOrderDetails = document.getElementById('toggleOrderDetails');
+    const subtotalElement = document.getElementById('subtotalAmount');
+    const taxElement = document.getElementById('taxAmount');
+    const totalElement = document.getElementById('totalAmount');
+    const checkoutForm = document.getElementById('checkoutForm');
+    
+    // Payment method radios
+    const cardRadio = document.getElementById('card');
+    const upiRadio = document.getElementById('upi');
+    const codRadio = document.getElementById('cod');
+    
+    // Payment details divs
+    const cardDetails = document.getElementById('cardDetails');
+    const upiDetails = document.getElementById('upiDetails');
+    
+    // Load order summary from session storage
+    const cartSubtotal = parseFloat(sessionStorage.getItem('cartSubtotal') || '0');
+    const cartTax = parseFloat(sessionStorage.getItem('cartTax') || '0');
+    const cartShipping = parseFloat(sessionStorage.getItem('cartShipping') || '40');
+    const cartTotal = parseFloat(sessionStorage.getItem('cartTotal') || '0');
+    
+    // Function to initialize checkout page
+    async function initCheckoutPage() {
+      // Set values from session storage
+      subtotalElement.textContent = `₹${cartSubtotal.toFixed(2)}`;
+      taxElement.textContent = `₹${cartTax.toFixed(2)}`;
+      totalElement.textContent = `₹${cartTotal.toFixed(2)}`;
+      
+      // Handle user authentication
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          // Get user cart data
+          try {
+            const userRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists() && userDoc.data().cart && userDoc.data().cart.length > 0) {
+              const cartItems = userDoc.data().cart;
+              
+              // Update item count
+              itemCountElement.textContent = cartItems.length;
+              
+              // Populate order items list
+              orderItemsList.innerHTML = '';
+              
+              cartItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex justify-between items-center text-sm';
+                itemElement.innerHTML = `
+                  <div class="flex items-center">
+                    <span class="font-medium text-gray-800">${item.bookName}</span>
+                    <span class="text-gray-500 ml-2">x${item.quantity}</span>
+                  </div>
+                  <span class="text-gray-700">₹${(parseFloat(item.price) * item.quantity).toFixed(2)}</span>
+                `;
+                
+                orderItemsList.appendChild(itemElement);
+              });
+              
+              // Fill user details if available
+              if (userDoc.data().name) {
+                const nameParts = userDoc.data().name.split(' ');
+                document.getElementById('firstName').value = nameParts[0] || '';
+                document.getElementById('lastName').value = nameParts.slice(1).join(' ') || '';
+              }
+              
+              if (userDoc.data().email) {
+                document.getElementById('email').value = userDoc.data().email;
+              }
+              
+              if (userDoc.data().phone) {
+                document.getElementById('phone').value = userDoc.data().phone;
+              }
+              
+              if (userDoc.data().address) {
+                document.getElementById('address').value = userDoc.data().address.street || '';
+                document.getElementById('city').value = userDoc.data().address.city || '';
+                document.getElementById('state').value = userDoc.data().address.state || '';
+                document.getElementById('pincode').value = userDoc.data().address.pincode || '';
+              }
+            } else {
+              // No items in cart, redirect to cart page
+              window.location.href = 'cart.html';
+            }
+          } catch (error) {
+            console.error("Error loading user data:", error);
+          }
+        } else {
+          // User not logged in, redirect to login
+          alert('Please login to checkout');
+          window.location.href = 'login.html?redirect=checkout.html';
+        }
+      });
+    }
+    
+    // Initialize page
+    initCheckoutPage();
+    
+    // Toggle order details
+    toggleOrderDetails.addEventListener('click', () => {
+      const isHidden = orderItemsList.classList.contains('hidden');
+      
+      if (isHidden) {
+        orderItemsList.classList.remove('hidden');
+        toggleOrderDetails.textContent = 'Hide details';
+      } else {
+        orderItemsList.classList.add('hidden');
+        toggleOrderDetails.textContent = 'Show details';
+      }
+    });
+    
+    // Toggle payment method details
+    cardRadio.addEventListener('change', () => {
+      if (cardRadio.checked) {
+        cardDetails.classList.remove('hidden');
+        upiDetails.classList.add('hidden');
+      }
+    });
+    
+    upiRadio.addEventListener('change', () => {
+      if (upiRadio.checked) {
+        cardDetails.classList.add('hidden');
+        upiDetails.classList.remove('hidden');
+      }
+    });
+    
+    codRadio.addEventListener('change', () => {
+      if (codRadio.checked) {
+        cardDetails.classList.add('hidden');
+        upiDetails.classList.add('hidden');
+      }
+    });
+    
+    // Handle checkout form submission
+    checkoutForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const user = auth.currentUser;
+      
+      if (!user) {
+        alert('You must be logged in to place an order');
+        return;
+      }
+      
+      // Create form data object
+      const formData = new FormData(checkoutForm);
+      const paymentMethod = formData.get('paymentMethod');
+      
+      // Validate payment details if necessary
+      if (paymentMethod === 'card') {
+        const cardNumber = formData.get('cardNumber');
+        const expiry = formData.get('expiry');
+        const cvv = formData.get('cvv');
+        
+        if (!cardNumber || !expiry || !cvv) {
+          alert('Please fill in all card details');
+          return;
+        }
+      } else if (paymentMethod === 'upi') {
+        const upiId = formData.get('upiId');
+        
+        if (!upiId) {
+          alert('Please enter your UPI ID');
+          return;
+        }
+      }
+      
+      try {
+        // Get user's cart
+        const userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+        const cartItems = userDoc.exists() ? userDoc.data().cart || [] : [];
+        
+        if (cartItems.length === 0) {
+          alert('Your cart is empty');
+          return;
+        }
+        
+        // Create shipping address object
+        const shippingAddress = {
+          firstName: formData.get('firstName'),
+          lastName: formData.get('lastName'),
+          email: formData.get('email'),
+          phone: formData.get('phone'),
+          street: formData.get('address'),
+          city: formData.get('city'),
+          state: formData.get('state'),
+          pincode: formData.get('pincode')
+        };
+        
+        // Create order object
+        const orderData = {
+          userId: user.uid,
+          userEmail: user.email,
+          userName: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
+          items: cartItems,
+          shippingAddress,
+          paymentMethod,
+          paymentDetails: paymentMethod === 'card' ? {
+            cardNumber: formData.get('cardNumber'),
+            expiry: formData.get('expiry'),
+            nameOnCard: formData.get('nameOnCard')
+          } : paymentMethod === 'upi' ? {
+            upiId: formData.get('upiId')
+          } : {},
+          subtotal: cartSubtotal,
+          tax: cartTax,
+          shipping: cartShipping,
+          total: cartTotal,
+          status: 'pending',
+          createdAt: serverTimestamp()
+        };
+        
+        // Add to orders collection
+        const orderRef = await addDoc(collection(db, "orders"), orderData);
+        
+        // Add to user's orders array
+        await updateDoc(userRef, {
+          orders: arrayRemove(...cartItems), // Remove items from cart
+          cart: [] // Clear cart
+        });
+        
+        // Save order ID in session storage for confirmation page
+        sessionStorage.setItem('lastOrderId', orderRef.id);
+        
+        // Redirect to confirmation page
+        window.location.href = 'order-confirmation.html';
+        
+      } catch (error) {
+        console.error("Error processing order:", error);
+        alert('There was an error processing your order. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html> 
